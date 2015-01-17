@@ -1,24 +1,10 @@
-#! /usr/bin/env python3.4
 # -*- coding: utf-8 -*-
-import sys
 import json
-import logging
 import random
 import urllib.request
 
 
-# logger の初期化
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '[%(asctime)s][%(name)s] %(levelname)s %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
-
-class DocomoZatsudanClient(object):
+class _DClientBase(object):
     '''Docomo 雑談 API と雑談する Client
     概要は以下
     https://dev.smt.docomo.ne.jp/?p=docs.api.page&api_docs_id=17
@@ -28,7 +14,7 @@ class DocomoZatsudanClient(object):
     BASEURL = 'https://api.apigw.smt.docomo.ne.jp/dialogue/v1/dialogue'
 
     # API KEY
-    APIKEY = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    apikey = None
 
     # 雑談相手の特徴
     # とりあえず API コンソールまま
@@ -44,7 +30,7 @@ class DocomoZatsudanClient(object):
     place = '東京'
 
     # 通常の会話 (dialog) かしりとり(srtr) か
-    mode = 'dialog'
+    mode = None
 
     # API に渡す引数
     parameters = ('nickname', 'nickname_y', 'sex', 'bloodtype', 'birthdateY',
@@ -54,20 +40,22 @@ class DocomoZatsudanClient(object):
     # 引き続き会話を続ける場合同じ値を指定する
     context = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, apikey, *args, **kwargs):
         '''会話パラメーターを初期化し、コンテキストを決定する'''
+        self.apikey = apikey
+
         for key in self.parameters:
             value = kwargs.get(key, getattr(self, key))
             setattr(self, key, value)
 
         # context が未指定の場合、初期化して設定する
-        self.context = kwargs.get('context', self._get_new_context())
+        self.context = kwargs.get('context', self._get_chat_hashing())
 
     @staticmethod
-    def _get_new_context():
+    def _get_chat_hashing(num=64):
         '''コンテキスト文字列を返す ([0-9a-z] 64文字)'''
         _seq = [chr(x) for x in list(range(48, 58)) + list(range(97, 123))]
-        return ''.join([random.choice(_seq) for x in range(64)])
+        return ''.join([random.choice(_seq) for x in range(num)])
 
     def talk(self, message, context=None):
         '''雑談 API と会話する'''
@@ -90,9 +78,12 @@ class DocomoZatsudanClient(object):
 
     def _get_url(self):
         '''API のエンドポイント URL を返す'''
-        return self.BASEURL + '?APIKEY=' + self.APIKEY
+        return self.BASEURL + '?APIKEY=' + self.apikey
 
 
-class DocomoSrtrClient(DocomoZatsudanClient):
-    '''しりとりクライアント'''
-    mode = 'srtr'
+class DocomoChatClient(_DClientBase):
+    mode = 'dialog'  # 雑談モード
+
+
+class DocomoSrtrClient(_DClientBase):
+    mode = 'srtr'    # しりとりモード
