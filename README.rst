@@ -4,7 +4,7 @@ acme.dchat
 
 What API ?
 ==========
-`NTT docomo <https://www.nttdocomo.co.jp/>`_ has `a chatting API<https://dev.smt.docomo.ne.jp/?p=docs.api.page&api_docs_id=17>`_.
+`NTT docomo <https://www.nttdocomo.co.jp/>`_ has `a chatting API <https://dev.smt.docomo.ne.jp/?p=docs.api.page&api_docs_id=17>`_.
 
 This software provides a client for the api.
 
